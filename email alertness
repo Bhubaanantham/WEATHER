@@ -1,0 +1,174 @@
+<asp:Calendar id="Calendar1" BorderColor="#999999"
+    Font-Names="Arial" runat="server">
+  <OtherMonthDayStyle ForeColor="#000000"></OtherMonthDayStyle>
+   <TitleStyle BackColor="#E5E2B9"
+                  ForeColor="Black" Font-Bold="True">
+     </TitleStyle>
+      <DayStyle BackColor="#DCDCDC"></DayStyle>
+      <SelectedDayStyle BackColor="#000000"
+                        Font-Bold="True">
+     </SelectedDayStyle>
+</asp:Calendar>
+<Calendar Control> (see listing 1)
+
+if (Request.QueryString["stat"] = = 1) {
+	..instructions (in html)
+<TextBox control> (for getting user defined time for appt.)
+}
+
+<Image Button Control>
+<asp:TextBox id="Appttime" Text=" Width="65px" runat="server"/>
+<form runat="server>
+<Calendar Control> (see listing 1)
+
+if (Request.QueryString["stat"] = = 1) {
+		..instructions (in html)
+<TextBox control> (for getting user defined time for appt.)
+
+<Image Button Control>
+
+}
+
+if (Request.QueryString["stat"] = = 2) {
+		..text summary (in html)
+<TextBox control> (for getting appointment title)
+<TextBox control> (for getting user email address)
+
+<Image Button Control>
+
+}
+
+</form>
+<asp:TextBox id="Name" Text=" Width="155px" runat="server"/>
+<asp:TextBox id="Email" Text=" Width="155px" runat="server"/>
+<input type=image id="InputImage2" src="grafix/button-submit.gif"
+   border="0" OnServerClick="Button_Click2" runat="server">
+<%@ Import Namespace="System.Data" %>
+<%@ Import Namespace="System.IO" %>
+<%@ Import Namespace="System.Web.Mail" %>
+<%@ Import Namespace="System.Data.SqlClient" %>
+void Page_Load(Object sender, EventArgs e)
+{
+
+ DateTime DateIs;
+DateTime DateIsd;
+DateIs = DateTime.Now;
+
+string email = ";
+string datein = ";
+string aptdate = ";
+ string apttime = "; 
+ string apttitle = ";
+int stat = 0;
+ Int id = 0;
+
+ datein = DateIs.ToShortDateString();
+
+ SqlConnection conn =
+  new SqlConnection("Data Source=<your server>;
+  database=CalCon;uid=xxxx;pwd=xxxx");
+  SqlCommand cmd = new SqlCommand( "Select * from Appts_tbl", conn);
+
+conn.Open();
+
+ SqlDataReader myReader = cmd.ExecuteReader();
+
+	while (myReader.Read())
+
+	{
+	       id = myReader.GetInt32(0);
+	       email = myReader.GetString(3);
+	       DateIsd = myReader.GetDateTime(4);
+	       stat = myReader.GetInt32(5);
+	       aptdate = myReader.GetString(6);
+	       apttime = myReader.GetString(7);
+	       apttitle = myReader.GetString(8);
+
+
+	       string dateisx = ";
+	       dateisx = DateIsd.ToShortDateString();
+
+	       if ((datein == dateisx) && (stat == 0)) {
+
+	SqlConnection conn2 = new SqlConnection(
+          "Data Source=<your server >;database=CalCon;uid=xxxxx;pwd=xxxxxx");
+	SqlCommand commandx =
+          new SqlCommand( "Update Appts_tbl Set stat = 1 Where id = " + id, conn2);
+		conn2.Open();
+		commandx.ExecuteNonQuery();
+		conn2.Close();
+
+	       MailMessage msg = new MailMessage();
+	       msg.To = email;
+	       msg.From = "youremail@yourdomain.com";
+	       msg.Subject = "Just a Reminder for  " + apttitle;
+	       msg.BodyFormat = MailFormat.Html;
+	       msg.Body =
+                "Here is your reminder not to miss " + apttitle +
+                " on "  + aptdate + " at " + apttime;
+
+	       SmtpMail.Send(msg);
+
+	       }
+
+	}
+
+ myReader.Close();
+ conn.Close();
+
+ }
+void Button_Click(object Source, ImageClickEventArgs e)
+{
+
+if (Appttime.Text != ") {
+	Session["apptdate"] = Calendar1.SelectedDate.ToShortDateString();
+	Session["appttime"] = Appttime.Text;
+		
+	Response.Redirect("apptrem.aspx?stat=2");
+	}
+}
+void Button_Click2(object Source, ImageClickEventArgs e)
+   {
+
+  if (Email.Text != ") {
+
+  	int id = 0;
+ 	DateTime DateIs;
+ 	DateIs = DateTime.Now;
+
+ 	SqlConnection conn = new SqlConnection("Data Source=<your server>;
+                database=CalCon;uid=xxxx;pwd=xxxx");
+ 	SqlCommand command =
+                new SqlCommand( "INSERT INTO Appts_tbl(email,daten, datea,apt_time,name)
+                VALUES (@email, @daten, @datea, @apt_time, @name)", conn);
+
+ 	conn.Open();
+
+	SqlParameter param1 = new SqlParameter( "@email", SqlDbType.VarChar,75);
+	Param1.Value = Email.Text;
+	command.Parameters.Add( param1 );
+
+	SqlParameter param2 = new SqlParameter( "@daten", SqlDbType.DateTime);
+	param2Value = Calendar1.SelectedDate.ToShortDateString();
+	command.Parameters.Add( param2 );
+
+	SqlParameter param3 = new SqlParameter( "@datea", SqlDbType.VarChar,25);
+	Param3.Value = (String) Session["apptdate"];
+	command.Parameters.Add( param3 );
+
+	SqlParameter param4 = new SqlParameter( "@apt_time", SqlDbType.VarChar,15);
+	Param4.Value = (String) Session["appttime"];
+	command.Parameters.Add( param4 );
+
+	SqlParameter param5 = new SqlParameter( "@name", SqlDbType.VarChar,100);
+	Param5.Value = Name.Text;
+	command.Parameters.Add( param5 );
+
+	int numRowsAffectedx = command.ExecuteNonQuery();
+
+	conn.Close();
+
+	Response.Redirect("confirm.aspx");
+
+	}
+}
